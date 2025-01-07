@@ -47,3 +47,8 @@ output "db_subnet_group_id" {
   description = "ID of the subnet group associated with the RDS instance."
   value       = module.db.db_subnet_group_id
 }
+
+output "db_name" {
+  description = "The database name used in the RDS module"
+  value       = var.db_name
+}
