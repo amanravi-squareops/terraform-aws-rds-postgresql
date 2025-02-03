@@ -9,8 +9,11 @@ locals {
   engine_version          = "15.4"
   instance_class          = "db.t4g.micro"
   storage_type            = "gp3"
+  cluster_name            = ""
+  replica_count           = 1
+  replica_enable          = false
   current_identity        = data.aws_caller_identity.current.arn
-  allowed_security_groups = ["sg-xxxxxxxxxxxxxxxx"]
+  allowed_security_groups = ["sg-xxxxxxxxxxxxxx"]
   custom_user_password    = ""
   additional_tags = {
     Owner      = "Organization_Name"
@@ -100,13 +103,14 @@ module "vpc" {
 
 module "rds-pg" {
   source                           = "squareops/rds-postgresql/aws"
+  version                          = "2.0.0"
   name                             = local.name
   db_name                          = "test"
-  multi_az                         = "true"
+  multi_az                         = false
   family                           = local.family
   vpc_id                           = module.vpc.vpc_id
   allowed_security_groups          = local.allowed_security_groups
-  subnet_ids                       = module.vpc.database_subnets ## db subnets
+  subnet_ids                       = module.vpc.database_subnets
   environment                      = local.environment
   kms_key_arn                      = module.kms.key_arn
   storage_type                     = local.storage_type
@@ -132,18 +136,18 @@ module "rds-pg" {
   custom_user_password             = local.custom_user_password
   #if you want backup and restore then you have to create your cluster with rds vpc id , private subnets, kms key.
   #And allow cluster security group in rds security group
-  cluster_name              = ""
+  cluster_name              = local.cluster_name
   namespace                 = local.namespace
   create_namespace          = local.create_namespace
   postgresdb_backup_enabled = false
   postgresdb_backup_config = {
-    postgres_database_name = ""                             # Specify the database name or Leave empty if you wish to backup all databases
-    cron_for_full_backup   = "*/2 * * * *"                  # set cronjob for backup
+    postgres_database_name = ""                              # Specify the database name or Leave empty if you wish to backup all databases
+    cron_for_full_backup   = "*/2 * * * *"                   # set cronjob for backup
     bucket_uri             = "s3://postgres-backups-atmosly" # s3 bucket uri
   }
   postgresdb_restore_enabled = false
   postgresdb_restore_config = {
     bucket_uri       = "s3://postgres-backups-atmosly" #S3 bucket URI (without a trailing slash /) containing the backup dump file.
-    backup_file_name = "db5_20241114111607.sql"       #Give .sql or .zip file for restore
+    backup_file_name = "db5_20241114111607.sql"        #Give .sql or .zip file for restore
   }
 }
